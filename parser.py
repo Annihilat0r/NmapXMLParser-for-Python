@@ -43,7 +43,7 @@ def analyse_nmap_xml_scan(nmap_xml_output=None):
     return scan_result
 
 
-result = analyse_nmap_xml_scan(open('scan3.xml').read())
+result = analyse_nmap_xml_scan(open('scan.xml').read())
 
 print 'Host:', result['host']
 print 'Scan parameters:', result['parameters']

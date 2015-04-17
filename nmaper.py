@@ -1,8 +1,10 @@
 import nmap
+import ipgetter
 
+print ipgetter.myip()
 
 nm = nmap.PortScanner()
-nm.scan('192.168.0.1',ports='50-82')
+nm.scan(ipgetter.myip(),arguments='')
 print nm.command_line()
 
 for host in nm.all_hosts():
@@ -18,6 +20,6 @@ for host in nm.all_hosts():
         for port in lport:
             try:
                 print port
-                #a = nm[host][proto][port]['state']
-                #print ('port : %s\tstate : %s' % (port,a))
+                a = nm[host][proto][port]['state']
+                print ('port : %s\tstate : %s' % (port,a))
             except: pass

@@ -6,9 +6,18 @@ from DB_config import Base, CurrentScan
 
 
 nm = nmap.PortScanner()
-# nm.scan(ipgetter.myip(),arguments='')  ###Uncomment for use your external IP
-nm.scan(ports='20-85')  #DEMO scan you localhost
-print 'Nmap query:', nm.command_line()
+#nm.scan('scanme.nmap.org',arguments='')  ###Uncomment for use your external IP
+scan_dict={'1':ipgetter.myip(), '2':'127.0.0.1', '3': 'scanme.nmap.org'}
+print('Choose host for scan:')
+print('1: External IP')
+print('2: localhost')
+print('3: scanme.nmap.org')
+host_for_scan = input()
+print('Enter port range (20-80)')
+ports = input()
+print('Nmap scans host %s for %s ports... please wait...' %(scan_dict[host_for_scan], ports))
+nm.scan(scan_dict[host_for_scan],ports=ports)  #DEMO scan you localhost
+print ('Nmap query:', nm.command_line())
 engine = create_engine('sqlite:///sqlalchemy_example.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
@@ -18,7 +27,6 @@ session.query(CurrentScan).delete()
 for host in nm.all_hosts():
     for proto in nm[host].all_protocols():
         lport = nm[host][proto].keys()
-        lport.sort()
         for port in lport:
             try:
                 state = nm[host][proto][port]['state']
@@ -26,10 +34,14 @@ for host in nm.all_hosts():
                 session.add(scan)
             except: pass
 
-print ''
-print "QUERY FROM TABLE 'CurrentScan'"
-print '_____________________________________'
-print '  #   Host Name  Proto Port   State'
+print('')
+print("QUERY FROM TABLE 'CurrentScan'")
+print('_____________________________________')
+print('  #   Host Name  Proto Port   State')
 for scan in session.query(CurrentScan):
     print ('| %s | %s | %s | %s | %s |' % (scan.id, scan.name, scan.proto, scan.port, scan.port_state))
-raw_input()
+
+
+input()
+print (nm)
+input()

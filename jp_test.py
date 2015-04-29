@@ -5,19 +5,10 @@ from libnmap.parser import NmapParser
 from libnmap.plugins.backendpluginFactory import BackendPluginFactory
 from libnmap.objects.report import NmapReport
 from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from tables_config import  ConfigNmap, base
 
-base = declarative_base()
 
-class ConfigNmap(base):
-    __tablename__ = 'config_nmap'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
-    id = Column(Integer, primary_key=True)
-    property = Column(String(255), nullable=False)
-    value = Column(String(255), nullable=False)
 
 class NmapWrapper:
     def __init__(self):
@@ -125,9 +116,27 @@ def first_start():
         print(sa.property, '=', sa.value)
 
 
-if __name__ == '__main__':
-    #first_start()   ###uncoment for firs start
-    nm = NmapWrapper()
-    #nm.launch() #For start scan
-    #nm.get_report(1) #get report #1
-    #nm.get_all_reports(True) #get all reports raw_data
+def main():
+    print('\n '
+              'Welcome to jp_test (Nmap-to-DB) \n '
+              '1: Do scan \n '
+              '2: Get one report from DB \n '
+              '3: Get all reports from DB \n '
+              '4: Config DB for nmsp parameters \n '
+              '5: Exit')
+    chose = int(input())
+    if chose == 1:
+        print(nm.launch()) #For start scan
+    if chose == 2:
+        print('Write a number of report:')
+        a = input()
+        print(nm.get_report(a, True)) #get report #1
+    if chose == 3:
+        print(nm.get_all_reports(True)) #get all reports raw_data
+    if chose == 4:
+        first_start()
+    if chose != 5:  # do comment for cancel recursive work
+        main()
+
+nm = NmapWrapper()
+main()

@@ -3,6 +3,11 @@ from libnmap.parser import NmapParser
 
 
 def nested_obj(objname):
+    '''
+    Find a string for compare (NmapHost::127.0.0.1, NmapService::tcp.25, etc)
+    :param objname: diff result, trying to go deeper
+    :return: 'NmapHost' or 'NmapService'
+    '''
     rval = None
     splitted = objname.split("::")
     if len(splitted) == 2:

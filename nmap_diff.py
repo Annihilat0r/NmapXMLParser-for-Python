@@ -98,6 +98,7 @@ class Diff:
             rep1 = all_reports[first_rep][1]
             rep2 = all_reports[second_rep][1]
             self.print_diff(rep1, rep2)
+        self.write_to_db(self.diff)
 
     def write_to_db(self, diff):
         session = self.nm.db_connect()
@@ -107,6 +108,7 @@ class Diff:
         w = (bytes(str_confirm, 'utf-8'))
         session.add(NmapDiff(result=w))
         session.commit()
+
         #debug. delete for prod
         print('SELECT * FROM config_nmap')
         s = session.query(NmapDiff).all()
@@ -141,7 +143,7 @@ class Diff:
             self.diff_reports(test_for_debug=True)
         #if chose != 5:  yncomment for recursive work
         #    self.main()
-        self.write_to_db(self.diff)
+
         return self.diff
 
 

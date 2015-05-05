@@ -1,12 +1,13 @@
 __author__ = 'dare7'
 import nmap
-import ipgetter
+import ipgetter, datetime
 from libnmap.parser import NmapParser
 from libnmap.plugins.backendpluginFactory import BackendPluginFactory
 from libnmap.objects.report import NmapReport
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from tables_config import  ConfigNmap, base
+from tables_config import  ConfigNmap, base, NmapReportsDHCPDiscover, NmapReportsSnifferDetect
+import xmltodict, json
 
 
 
@@ -37,18 +38,22 @@ class NmapWrapper:
         db_session = sessionmaker(bind=engine)
         return db_session()
 
-    def launch(self):
+    def launch(self, arguments=''):
         """
         launches nmap scan
         :return: nmap report as object type NmapObject
         """
         nm = nmap.PortScanner()
         self.config() #get ip and ports for scan
-        nm.scan(self.external_address, self.target_ports)
+        if arguments == '':
+            nm.scan(self.external_address, self.target_ports)
+        else:
+            nm.scan(self.external_address, self.target_ports, arguments=arguments)
+        print(nm.command_line())
         result = nm.get_nmap_last_output()
         nm_report = NmapParser.parse_fromstring(result)
         self.write_result(nm_report)
-        return nm_report
+        return result
 
     def write_result(self, nm_report):
         """
@@ -89,7 +94,42 @@ class NmapWrapper:
             return raw_list
         return all_reports
 
-def first_start():
+    def DHCP_discover(self):
+        result = self.launch(arguments='--script broadcast-dhcp-discover')
+        print()
+        parse = xmltodict.parse(result)
+        session = self.db_connect()
+        time = datetime.datetime.now()
+        string_report = json.dumps(parse)
+        parse_byte = (bytes(string_report, 'utf-8'))
+        session.add(NmapReportsDHCPDiscover(time=time, report=parse_byte))
+        session.commit()
+
+    def get_DHCP_discover_report(self):
+        session = self.db_connect()
+        repo = session.query(NmapReportsDHCPDiscover).order_by((NmapReportsDHCPDiscover.id).desc()).first().report
+        repo_dict = json.loads(repo.decode('utf-8'))
+        return repo_dict
+
+
+    def sniffer_detect(self, arguments='--script sniffer-detect'):
+        result = self.launch(arguments=arguments)
+        print(result)
+        parse = xmltodict.parse(result)
+        session = self.db_connect()
+        time = datetime.datetime.now()
+        string_report = json.dumps(parse)
+        parse_byte = (bytes(string_report, 'utf-8'))
+        session.add(NmapReportsSnifferDetect(time=time, report=parse_byte))
+        session.commit()
+
+    def get_sniffer_detect_report(self):
+        session = self.db_connect()
+        repo = session.query(NmapReportsSnifferDetect).order_by((NmapReportsSnifferDetect.id).desc()).first().report
+        repo_dict = json.loads(repo.decode('utf-8'))
+        return repo_dict
+
+def first_start(prod = True):
     '''
     for first start - write to BD table "nmap_config" nmap config parameters
     '''
@@ -99,8 +139,10 @@ def first_start():
     db_session = sessionmaker(bind=engine)
     session = db_session()
     session.query(ConfigNmap).delete()
-    new_config_nmap = ConfigNmap(property='ext_ip', value = '127.0.0.1')
-####new_config_nmap = ConfigNmap(property='ext_ip', value = str(ipgetter.myip()))  ###uncoment for prod
+    if prod:
+        new_config_nmap = ConfigNmap(property='ext_ip', value = str(ipgetter.myip()))  ###uncoment for prod
+    else:
+        new_config_nmap = ConfigNmap(property='ext_ip', value = '127.0.0.1')
     session.add(new_config_nmap)
     port_config_nmap = ConfigNmap(property='ports1', value = '20-443')
     session.add(port_config_nmap)
@@ -122,8 +164,9 @@ def main():
               '1: Do scan \n '
               '2: Get one report from DB \n '
               '3: Get all reports from DB \n '
-              '4: Config DB for nmsp parameters \n '
-              '5: Exit')
+              '4: Config DB for nmap parameters (127.0.0.1 20-443) \n '
+              '5: Config DB for nmap parameters for prod (get external IP) \n '
+              '6: Exit')
     chose = int(input())
     if chose == 1:
         print(nm.launch()) #For start scan
@@ -134,9 +177,13 @@ def main():
     if chose == 3:
         print(nm.get_all_reports(True)) #get all reports raw_data
     if chose == 4:
-        first_start()
-    if chose != 5:  # do comment for cancel recursive work
+        first_start(prod=False)
+    if chose == 5:
+        first_start(prod=True)
+    if chose != 6:  # do comment for cancel recursive work
         main()
 
-nm = NmapWrapper()
-main()
+
+if __name__ == "__main__":
+    nm = NmapWrapper()
+    main()

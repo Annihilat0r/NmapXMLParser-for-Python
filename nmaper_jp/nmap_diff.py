@@ -1,6 +1,7 @@
-from jp_test import NmapWrapper
-from tables_config import NmapDiff
 from libnmap.parser import NmapParser
+
+from jp_test import NmapWrapper
+from nmaper_jp.tables_config import NmapDiff
 
 
 class Diff:
@@ -146,6 +147,6 @@ class Diff:
 
         return self.diff
 
-
-diff = Diff()
-diff.main()
+if __name__ == "__main__":
+    diff = Diff()
+    diff.main()

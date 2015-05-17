@@ -1,14 +1,14 @@
-__author__ = 'dare7'
+import datetime
+import json
 import nmap
-import ipgetter, datetime
+import ipgetter
 from libnmap.parser import NmapParser
 from libnmap.plugins.backendpluginFactory import BackendPluginFactory
-from libnmap.objects.report import NmapReport
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from tables_config import  ConfigNmap, base, NmapReportsDHCPDiscover, NmapReportsSnifferDetect
-import xmltodict, json
+import xmltodict
 
+from nmaper_jp.tables_config import  ConfigNmap, base, NmapReportsDHCPDiscover, NmapReportsSnifferDetect
 
 
 class NmapWrapper:
@@ -123,6 +123,7 @@ class NmapWrapper:
         session.add(NmapReportsSnifferDetect(time=time, report=parse_byte))
         session.commit()
 
+
     def get_sniffer_detect_report(self):
         session = self.db_connect()
         repo = session.query(NmapReportsSnifferDetect).order_by((NmapReportsSnifferDetect.id).desc()).first().report
@@ -157,33 +158,12 @@ def first_start(prod = True):
     for sa in s:
         print(sa.property, '=', sa.value)
 
-
-def main():
-    print('\n '
-              'Welcome to jp_test (Nmap-to-DB) \n '
-              '1: Do scan \n '
-              '2: Get one report from DB \n '
-              '3: Get all reports from DB \n '
-              '4: Config DB for nmap parameters (127.0.0.1 20-443) \n '
-              '5: Config DB for nmap parameters for prod (get external IP) \n '
-              '6: Exit')
-    chose = int(input())
-    if chose == 1:
-        print(nm.launch()) #For start scan
-    if chose == 2:
-        print('Write a number of report:')
-        a = input()
-        print(nm.get_report(a, True)) #get report #1
-    if chose == 3:
-        print(nm.get_all_reports(True)) #get all reports raw_data
-    if chose == 4:
-        first_start(prod=False)
-    if chose == 5:
-        first_start(prod=True)
-    if chose != 6:  # do comment for cancel recursive work
-        main()
-
-
-if __name__ == "__main__":
+def sniffer_detect_lunch():
     nm = NmapWrapper()
-    main()
+    nm.sniffer_detect()
+    print(nm.get_sniffer_detect_report())
+
+def DHCP_discover():
+    nm = NmapWrapper()
+    nm.DHCP_discover()
+    print(nm.get_DHCP_discover_report())

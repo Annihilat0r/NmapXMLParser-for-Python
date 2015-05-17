@@ -1,5 +1,0 @@
-from jp_test import NmapWrapper
-
-nm = NmapWrapper()
-nm.DHCP_discover()
-print(nm.get_DHCP_discover_report())
